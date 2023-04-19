@@ -28,7 +28,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public CourseResponse addCourse(CourseRequest courseRequest) {
 //        確認課程 ID 是否重複
-        if(courseDao.findById(courseRequest.getCourseID()).isPresent()) {
+        if(courseDao.existsById(courseRequest.getCourseID())) {
             return new CourseResponse("課程已存在");
         }
 
@@ -49,7 +49,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public CourseResponse setCourse(CourseRequest courseRequest) {
 //        確認 ID 是否存在
-        if(!courseDao.findById(courseRequest.getCourseID()).isPresent()) {
+        if(!courseDao.existsById(courseRequest.getCourseID())) {
             return new CourseResponse("課程不存在");
         }
 
@@ -58,11 +58,16 @@ public class CourseSystemServiceImpl implements CourseSystemService{
 
 //        重新設定資訊
         String courseID = courseRequest.getCourseID();
-        String courseName = StringUtils.hasText(courseRequest.getCourseName())  ? courseRequest.getCourseName() : existCourse.getCourseName();
-        Integer day = !(courseRequest.getDay() == null) ? courseRequest.getDay() : existCourse.getDay();
-        Integer startTime = !(courseRequest.getStartTime() == null) ? courseRequest.getStartTime() : existCourse.getStartTime();
-        Integer endTime = !(courseRequest.getEndTime() == null) ? courseRequest.getEndTime() : existCourse.getEndTime();
-        Integer credit = !(courseRequest.getCredit() == null) ? courseRequest.getCredit() : existCourse.getCredit();
+        String courseName = StringUtils.hasText(courseRequest.getCourseName())
+                ? courseRequest.getCourseName() : existCourse.getCourseName();
+        Integer day = !(courseRequest.getDay() == null)
+                ? courseRequest.getDay() : existCourse.getDay();
+        Integer startTime = !(courseRequest.getStartTime() == null)
+                ? courseRequest.getStartTime() : existCourse.getStartTime();
+        Integer endTime = !(courseRequest.getEndTime() == null)
+                ? courseRequest.getEndTime() : existCourse.getEndTime();
+        Integer credit = !(courseRequest.getCredit() == null)
+                ? courseRequest.getCredit() : existCourse.getCredit();
 
 //        打包 Entity
         Course setCourse = new Course(courseID, courseName, day, startTime, endTime, credit);
@@ -81,12 +86,12 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public CourseResponse deleteCourse(CourseRequest courseRequest) {
 //        確認 ID 是否存在
-        if(!courseDao.findById(courseRequest.getCourseID()).isPresent()) {
+        if(!courseDao.existsById(courseRequest.getCourseID())) {
             return new CourseResponse("課程不存在");
         }
 
 //        確認課程是否有學生選修
-        if(selectionDao.findByCourseID(courseRequest.getCourseID()).size() != 0) {
+        if(selectionDao.existsByCourseID(courseRequest.getCourseID())) {
             return new CourseResponse("課程仍有學生選修");
         }
 
@@ -107,7 +112,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public StudentResponse addStudent(StudentRequest studentRequest) {
 //        確認學生 ID 是否存在
-        if(studentDao.findById(studentRequest.getStudentID()).isPresent()) {
+        if(studentDao.existsById(studentRequest.getStudentID())) {
             return new StudentResponse("學生 ID 已存在");
         }
 
@@ -127,7 +132,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public StudentResponse setStudent(StudentRequest studentRequest) {
 //        確認學生 ID 是否存在
-        if(!studentDao.findById(studentRequest.getStudentID()).isPresent()) {
+        if(!studentDao.existsById(studentRequest.getStudentID())) {
             return new StudentResponse("學生 ID 不存在");
         }
 
@@ -147,12 +152,12 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public StudentResponse deleteStudent(StudentRequest studentRequest) {
 //        確認學生 ID 是否存在
-        if(!studentDao.findById(studentRequest.getStudentID()).isPresent()) {
+        if(!studentDao.existsById(studentRequest.getStudentID())) {
             return new StudentResponse("學生 ID 不存在");
         }
 
 //        確認學生是否有選課
-        if(selectionDao.findByStudentID(studentRequest.getStudentID()).size() != 0) {
+        if(selectionDao.existsByStudentID(studentRequest.getStudentID())) {
             return new StudentResponse("請先將選課退選");
         }
 
@@ -182,6 +187,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
 //        學生學分(預設要選課的學分)
         int studentCredit = selectCourse.getCredit();
 
+//        確認學生學分上限 & 衝堂 & 同名課堂
         for(Selection selection : selectedList) {
 //            已選課程資訊
             Course selectedCourse = courseDao.findById(selection.getCourseID()).get();
@@ -214,8 +220,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
 
 //        確認每堂課最多三位學生
 //          要選課程的選修列表
-        List<Selection> list = selectionDao.findByCourseID(selectionRequest.getCourseID());
-        if(list.size() >= 3) {
+        if(selectionDao.countByCourseID(selectionRequest.getCourseID()) >= 3) {
             return new SelectionResponse("已達選修人數上限");
         }
 
@@ -237,10 +242,11 @@ public class CourseSystemServiceImpl implements CourseSystemService{
             return new SelectionResponse("請輸入課程ID");
         }
 //        打包 SelectionPK
-        SelectionPK deleteSelectionPK = new SelectionPK(selectionRequest.getStudentID(), selectionRequest.getCourseID());
+        SelectionPK deleteSelectionPK =
+                new SelectionPK(selectionRequest.getStudentID(), selectionRequest.getCourseID());
 
 //        確認該 PK 是否存在
-        if(!selectionDao.findById(deleteSelectionPK).isPresent()) {
+        if(!selectionDao.existsById(deleteSelectionPK)) {
             return new SelectionResponse("沒有該選課");
         }
 //        刪除選課
@@ -251,7 +257,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public SelectionResponse getSelectionByStudent(SelectionRequest selectionRequest) {
 //        確認學生 ID 是否存在
-        if(selectionDao.findByStudentID(selectionRequest.getStudentID()).size() == 0) {
+        if(selectionDao.existsByStudentID(selectionRequest.getStudentID())) {
             return new SelectionResponse("學生 ID 不存在");
         }
 
@@ -259,6 +265,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
         return new SelectionResponse("查詢成功", selectionList);
     }
 
+//    私有方法，驗證課程格式(除了ID)
     private Boolean checkCourseFormatWithoutID(Course course) {
 //        確認 name 是否為空
         if(course.getCourseName() == null) {

@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface SelectionDao extends JpaRepository<Selection, SelectionPK> {
     List<Selection> findByStudentID(String studentID);
     List<Selection> findByCourseID(String courseID);
+    Boolean existsByCourseID(String course);
+    Boolean existsByStudentID(String studentID);
+    Long countByCourseID(String courseID);
 }

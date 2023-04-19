@@ -27,7 +27,7 @@ public class CourseSystemController {
         return courseSystemService.setCourse(courseRequest);
     }
 
-    @PostMapping(" ")
+    @PostMapping("/delete_course")
     public CourseResponse deleteCourse(@RequestBody CourseRequest courseRequest) {
         return courseSystemService.deleteCourse(courseRequest);
     }
