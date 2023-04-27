@@ -257,7 +257,7 @@ public class CourseSystemServiceImpl implements CourseSystemService{
     @Override
     public SelectionResponse getSelectionByStudent(SelectionRequest selectionRequest) {
 //        確認學生 ID 是否存在
-        if(selectionDao.existsByStudentID(selectionRequest.getStudentID())) {
+        if(!selectionDao.existsByStudentID(selectionRequest.getStudentID())) {
             return new SelectionResponse("學生 ID 不存在");
         }
 
